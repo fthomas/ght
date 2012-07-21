@@ -21,13 +21,11 @@ import Git.SHA
 -- show-prefix, show-root use these
 import System.FilePath
 import System.Directory
-import System.Posix.Files
 
 -- show
 import System.IO (stdout)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Lazy.Char8 as C
-import Data.Digest.Pure.SHA (sha1, showDigest)
 
 ------------------------------------------------------------
 -- show-prefix
@@ -217,15 +215,9 @@ ghtHashObject = defCmd {
 ghtHashObjectHandler = liftIO . hashFile =<< appArgs
 
 hashFile [] = return ()
-
 hashFile (path:_) = do
-        b <- L.readFile path
-	status <- getFileStatus path	
-	let h = C.pack $ "blob " ++ (show $ fileSize status)
-	let t = h `L.append` (L.singleton 0x0) `L.append` b
-        putStrLn $ showHash t
-
-showHash = showDigest . sha1
+    blob <- L.readFile path
+    putStrLn $ showDigestBS $ sha1Blob blob
 
 ------------------------------------------------------------
 -- The Application
