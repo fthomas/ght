@@ -10,7 +10,7 @@ import Crypto.Hash.SHA1 as SHA1
 import Data.Bits
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Lazy.Char8 as LC
+import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Char
 import Data.List (unfoldr)
 import Numeric
@@ -34,9 +34,24 @@ readDigestBS :: String -> ByteString
 readDigestBS = BS.pack . map (fst . head . readHex) . takeWhile (not . null) . unfoldr (Just . splitAt 2)
 
 
--- | Compute the SHA1 hash of a blob.
-sha1Blob :: LC.ByteString -> ByteString
-sha1Blob blob = SHA1.hashlazy $ LC.append prefix blob
+------------------------------------------------------------
+data ObjectType = Commit | Tree | Blob | Tag
+
+instance Show ObjectType where
+    show Commit = "commit"
+    show Tree   = "tree"
+    show Blob   = "blob"
+    show Tag    = "tag"
+
+
+-- | Compute the object ID for an object.
+objectId :: ObjectType -> C.ByteString -> ByteString
+objectId objtype object = SHA1.hashlazy $ C.append prefix object
  where
-  lengthStr = (show . LC.length) blob
-  prefix = LC.pack $ "blob " ++ lengthStr ++ "\0"
+  lengthStr = (show . C.length) object
+  prefix = C.pack $ show objtype ++ " " ++ lengthStr ++ "\0"
+
+
+-- | Compute the object ID for a blob.
+sha1Blob :: C.ByteString -> ByteString
+sha1Blob = objectId Blob
