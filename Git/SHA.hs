@@ -3,7 +3,6 @@
 module Git.SHA (
     showDigestBS,
     readDigestBS,
-    ObjectType(..),
     objectDigest,
     objectId
 ) where
@@ -16,6 +15,8 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import Data.Char
 import Data.List (unfoldr)
 import Numeric
+
+import Git.Pack
 
 ------------------------------------------------------------
 -- From Data.Digest.Pure.SHA
@@ -37,23 +38,14 @@ readDigestBS = BS.pack . map (fst . head . readHex) . takeWhile (not . null) . u
 
 
 ------------------------------------------------------------
-data ObjectType = Commit | Tree | Blob | Tag
-    deriving (Eq, Read, Show)
-
-objTypeToString :: ObjectType -> String
-objTypeToString t = toLower x : xs
- where
-  (x:xs) = show t
-
-
 -- | Compute the object digest for an object.
-objectDigest :: ObjectType -> C.ByteString -> ByteString
+objectDigest :: PackObjectType -> C.ByteString -> ByteString
 objectDigest objType object = SHA1.hashlazy $ C.append prefix object
  where
   lengthStr = (show . C.length) object
-  prefix = C.pack $ objTypeToString objType ++ " " ++ lengthStr ++ "\0"
+  prefix = C.pack $ objectTypeToString objType ++ " " ++ lengthStr ++ "\0"
 
 
 -- | Compute the object ID for an object.
-objectId :: ObjectType -> C.ByteString -> String
+objectId :: PackObjectType -> C.ByteString -> String
 objectId objType object =  showDigestBS $ objectDigest objType object

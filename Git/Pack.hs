@@ -6,7 +6,7 @@ module Git.Pack (
         -- * Types
 	Pack(..),
         PackObject(..),
-        PackObjectType,
+        PackObjectType(..),
 
 	packPretty,
         packObjectPretty,
@@ -16,7 +16,9 @@ module Git.Pack (
         packReadObject,
 
         -- * Paths
-        packPath
+        packPath,
+
+        objectTypeToString
 ) where
 
 import Control.Applicative
@@ -167,3 +169,11 @@ packPretty (Pack ver n _) =
 		C.concat [(C.pack "Version:     "), C.pack (show ver)],
 		C.concat [(C.pack "Num Objects: "), C.pack (show n)]
 	]
+
+------------------------------------------------------------
+objectTypeToString :: PackObjectType -> String
+objectTypeToString OBJ_COMMIT = "commit"
+objectTypeToString OBJ_TREE   = "tree"
+objectTypeToString OBJ_BLOB   = "blob"
+objectTypeToString OBJ_TAG    = "tag"
+objectTypeToString t          = error $ "Undefined string representation for " ++ (show t)
