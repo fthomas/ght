@@ -217,7 +217,7 @@ ghtHashObjectHandler = liftIO . hashFile =<< appArgs
 hashFile [] = return ()
 hashFile (path:_) = do
     blob <- L.readFile path
-    putStrLn $ showDigestBS $ sha1Blob blob
+    putStrLn $ objectId Blob blob
 
 ------------------------------------------------------------
 -- The Application

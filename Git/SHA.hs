@@ -3,7 +3,9 @@
 module Git.SHA (
     showDigestBS,
     readDigestBS,
-    sha1Blob
+    ObjectType(..),
+    objectDigest,
+    objectId
 ) where
 
 import Crypto.Hash.SHA1 as SHA1
@@ -36,22 +38,22 @@ readDigestBS = BS.pack . map (fst . head . readHex) . takeWhile (not . null) . u
 
 ------------------------------------------------------------
 data ObjectType = Commit | Tree | Blob | Tag
+    deriving (Eq, Read, Show)
 
-instance Show ObjectType where
-    show Commit = "commit"
-    show Tree   = "tree"
-    show Blob   = "blob"
-    show Tag    = "tag"
+objTypeToString :: ObjectType -> String
+objTypeToString t = toLower x : xs
+ where
+  (x:xs) = show t
+
+
+-- | Compute the object digest for an object.
+objectDigest :: ObjectType -> C.ByteString -> ByteString
+objectDigest objType object = SHA1.hashlazy $ C.append prefix object
+ where
+  lengthStr = (show . C.length) object
+  prefix = C.pack $ objTypeToString objType ++ " " ++ lengthStr ++ "\0"
 
 
 -- | Compute the object ID for an object.
-objectId :: ObjectType -> C.ByteString -> ByteString
-objectId objtype object = SHA1.hashlazy $ C.append prefix object
- where
-  lengthStr = (show . C.length) object
-  prefix = C.pack $ show objtype ++ " " ++ lengthStr ++ "\0"
-
-
--- | Compute the object ID for a blob.
-sha1Blob :: C.ByteString -> ByteString
-sha1Blob = objectId Blob
+objectId :: ObjectType -> C.ByteString -> String
+objectId objType object =  showDigestBS $ objectDigest objType object
